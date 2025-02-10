@@ -1,3 +1,3 @@
-module github.com/OndrejHana/two-towers
+module two-towers
 
 go 1.22.5

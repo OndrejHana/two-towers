@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"two-towers/backend"
+)
 
 func main() {
-	fmt.Println("hello world")
+	if err := backend.Serve(); err != nil {
+		log.Fatal("could not run the server")
+	}
 }
