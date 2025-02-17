@@ -7,5 +7,11 @@ vanilla typescript bundeled by Vite frontend
 - [ ] Pridat three.js
 - [ ] Pridat sqlite databazi
 - [x] Pridat hlavni stranku
-- [ ] Pridat clerk sign up & sign in stranky
 - [x] Pridat Tailwind
+- [ ] Opravit a* tak, aby respektoval jiz existujici cesty
+- [ ] Upravit genenrovani map tak, aby se pridaly dalsi cesty
+- [ ] Nastavit server
+- [ ] Upravit linky podle nastaveni serveru
+- [ ] Pridat hlavni stranku
+- [ ] Nakreslit logo
+- [ ] Udelat stranku na zakladani hry
