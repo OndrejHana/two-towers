@@ -15,3 +15,4 @@ vanilla typescript bundeled by Vite frontend
 - [ ] Pridat hlavni stranku
 - [ ] Nakreslit logo
 - [ ] Udelat stranku na zakladani hry
+- [ ] Opravit errorove hlasky, protoze takhle jsou nepouzitelne
