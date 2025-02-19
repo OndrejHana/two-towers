@@ -17,9 +17,7 @@ const $ = {
   clerk: null,
 };
 
-function clear() {}
-
-function login(clerk) {
+function renderLogin(clerk) {
   const template = html`
     <div class="w-full h-full flex items-center justify-center">
       <div id="sign-in"></div>
@@ -30,7 +28,7 @@ function login(clerk) {
   clerk.mountSignIn(signInDiv);
 }
 
-function loading() {
+function renderLoading() {
   const template = html`
     <div class="w-full h-full flex items-center justify-center">
       <tree-spinner></tree-spinner>
@@ -40,12 +38,41 @@ function loading() {
   render(template, $.app());
 }
 
-function renderApp(state) {
-  clear();
+function renderMain() {
+  const template = html`
+    <div class="w-full h-full flex pt-32 flex-col items-center gap-8 relative">
+      <h1 class="font-bold text-4xl  mx-auto">Two towers</h1>
+      <div class="w-48 flex flex-col gap-2">
+        <button
+          class="p-2 hover:bg-neutral-800 rounded mx-auto bg-black text-neutral-50 w-full"
+        >
+          New game
+        </button>
+        <div class="w-full">
+                <input type="text" class="w-full p-2 bg-neutral-100 rounded-t focus:outline outline-black"></input>
+          <button
+            class="p-2 hover:bg-neutral-800 rounded-b mx-auto bg-black text-neutral-50 w-full"
+          >
+            Join game
+          </button>
+        </div>
+      </div>
+      <div class="absolute top-0 right-0 p-2">
+        <div id="user-button"></div>
+      </div>
+    </div>
+  `;
 
+  render(template, $.app());
+
+  const userBtn = document.getElementById("user-button");
+  $.clerk.mountUserButton(userBtn);
+}
+
+function renderApp(state) {
   switch (state) {
     case APP_STATE_LOADING:
-      loading();
+      renderLoading();
       break;
     case APP_STATE_LOGIN:
       const clerk = $.clerk;
@@ -59,7 +86,13 @@ function renderApp(state) {
         return;
       }
 
-      login(clerk);
+      renderLogin(clerk);
+      break;
+    case APP_STATE_MAIN:
+      renderMain();
+      break;
+    case APP_STATE_ERR:
+      console.log("rendering error");
       break;
   }
 }
