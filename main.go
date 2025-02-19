@@ -1,8 +1,12 @@
 package main
 
-func run() error {
-	return nil
-}
+import (
+	"log"
+	"two-towers/server"
+)
 
 func main() {
+	if err := server.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
