@@ -1,0 +1,6 @@
+- `doc`: Dokumentace
+- `lib`: backend knihovna (logicke moduly jako generovani mapy)
+- `public`: assety pro frontend, budou se bundlovat s frontendem
+- `server`: Router, spouštění a spojování aplikace
+- `src`: Zdrojový kód frontendu
+- `assets`: Soubory jako textury, které budou potřeba dostat ke klientovi samostatně

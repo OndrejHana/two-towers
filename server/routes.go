@@ -2,33 +2,38 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/clerk/clerk-sdk-go/v2/user"
-	"github.com/gorilla/websocket"
-
 	"two-towers/lib/lobbyStore"
 
-	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
+	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func getAuth(r *http.Request) (*clerk.User, bool, error) {
-	ctx := r.Context()
-	claims, ok := clerk.SessionClaimsFromContext(ctx)
-	if !ok {
-		return nil, false, nil
-	}
+type User struct {
+	ID string
+}
 
-	u, err := user.Get(ctx, claims.Subject)
-	if err != nil {
-		return nil, ok, err
-	}
+// func getAuth(r *http.Request) (*clerk.User, bool, error) {
+// 	ctx := r.Context()
+// 	claims, ok := clerk.SessionClaimsFromContext(ctx)
+// 	if !ok {
+// 		return nil, false, nil
+// 	}
+//
+// 	u, err := user.Get(ctx, claims.Subject)
+// 	if err != nil {
+// 		return nil, ok, err
+// 	}
+//
+// 	return u, true, nil
+// }
 
-	return u, true, nil
+func getAuth(r *http.Request) (*User, bool, error) {
+	return nil, false, errors.New("Not implemented")
 }
 
 func RegisterRoutes(mux *http.ServeMux, ls *lobbystore.LobbyStore) {
@@ -55,7 +60,7 @@ func RegisterRoutes(mux *http.ServeMux, ls *lobbystore.LobbyStore) {
 		fmt.Println("done")
 	})
 
-	mux.Handle("/api/lobby/new", clerkhttp.WithHeaderAuthorization()(newLobbyHandler))
+	mux.Handle("/api/lobby/new", newLobbyHandler)
 
 	// lobbyPlayersHandler := http.HandlerFunc()
 

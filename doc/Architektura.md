@@ -1,0 +1,1 @@
+Potřebuju poměrně rychlou auth na kontrolu sessionů během hry - Musím mít
