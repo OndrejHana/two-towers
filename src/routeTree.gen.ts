@@ -10,131 +10,131 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LobbyImport } from './routes/lobby'
-import { Route as IndexImport } from './routes/index'
-import { Route as LobbyNewImport } from './routes/lobby/new'
-import { Route as LobbyIdImport } from './routes/lobby/$id'
+import { Route as rootRoute } from "./routes/__root";
+import { Route as LobbyImport } from "./routes/lobby";
+import { Route as IndexImport } from "./routes/index";
+import { Route as LobbyNewImport } from "./routes/lobby/new";
+import { Route as LobbyIdImport } from "./routes/lobby/$id";
 
 // Create/Update Routes
 
 const LobbyRoute = LobbyImport.update({
-  id: '/lobby',
-  path: '/lobby',
+  id: "/lobby",
+  path: "/lobby",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const LobbyNewRoute = LobbyNewImport.update({
-  id: '/new',
-  path: '/new',
+  id: "/new",
+  path: "/new",
   getParentRoute: () => LobbyRoute,
-} as any)
+} as any);
 
 const LobbyIdRoute = LobbyIdImport.update({
-  id: '/$id',
-  path: '/$id',
+  id: "/$id",
+  path: "/$id",
   getParentRoute: () => LobbyRoute,
-} as any)
+} as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/lobby': {
-      id: '/lobby'
-      path: '/lobby'
-      fullPath: '/lobby'
-      preLoaderRoute: typeof LobbyImport
-      parentRoute: typeof rootRoute
-    }
-    '/lobby/$id': {
-      id: '/lobby/$id'
-      path: '/$id'
-      fullPath: '/lobby/$id'
-      preLoaderRoute: typeof LobbyIdImport
-      parentRoute: typeof LobbyImport
-    }
-    '/lobby/new': {
-      id: '/lobby/new'
-      path: '/new'
-      fullPath: '/lobby/new'
-      preLoaderRoute: typeof LobbyNewImport
-      parentRoute: typeof LobbyImport
-    }
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/lobby": {
+      id: "/lobby";
+      path: "/lobby";
+      fullPath: "/lobby";
+      preLoaderRoute: typeof LobbyImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/lobby/$id": {
+      id: "/lobby/$id";
+      path: "/$id";
+      fullPath: "/lobby/$id";
+      preLoaderRoute: typeof LobbyIdImport;
+      parentRoute: typeof LobbyImport;
+    };
+    "/lobby/new": {
+      id: "/lobby/new";
+      path: "/new";
+      fullPath: "/lobby/new";
+      preLoaderRoute: typeof LobbyNewImport;
+      parentRoute: typeof LobbyImport;
+    };
   }
 }
 
 // Create and export the route tree
 
 interface LobbyRouteChildren {
-  LobbyIdRoute: typeof LobbyIdRoute
-  LobbyNewRoute: typeof LobbyNewRoute
+  LobbyIdRoute: typeof LobbyIdRoute;
+  LobbyNewRoute: typeof LobbyNewRoute;
 }
 
 const LobbyRouteChildren: LobbyRouteChildren = {
   LobbyIdRoute: LobbyIdRoute,
   LobbyNewRoute: LobbyNewRoute,
-}
+};
 
-const LobbyRouteWithChildren = LobbyRoute._addFileChildren(LobbyRouteChildren)
+const LobbyRouteWithChildren = LobbyRoute._addFileChildren(LobbyRouteChildren);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/lobby': typeof LobbyRouteWithChildren
-  '/lobby/$id': typeof LobbyIdRoute
-  '/lobby/new': typeof LobbyNewRoute
+  "/": typeof IndexRoute;
+  "/lobby": typeof LobbyRouteWithChildren;
+  "/lobby/$id": typeof LobbyIdRoute;
+  "/lobby/new": typeof LobbyNewRoute;
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/lobby': typeof LobbyRouteWithChildren
-  '/lobby/$id': typeof LobbyIdRoute
-  '/lobby/new': typeof LobbyNewRoute
+  "/": typeof IndexRoute;
+  "/lobby": typeof LobbyRouteWithChildren;
+  "/lobby/$id": typeof LobbyIdRoute;
+  "/lobby/new": typeof LobbyNewRoute;
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/lobby': typeof LobbyRouteWithChildren
-  '/lobby/$id': typeof LobbyIdRoute
-  '/lobby/new': typeof LobbyNewRoute
+  __root__: typeof rootRoute;
+  "/": typeof IndexRoute;
+  "/lobby": typeof LobbyRouteWithChildren;
+  "/lobby/$id": typeof LobbyIdRoute;
+  "/lobby/new": typeof LobbyNewRoute;
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lobby' | '/lobby/$id' | '/lobby/new'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lobby' | '/lobby/$id' | '/lobby/new'
-  id: '__root__' | '/' | '/lobby' | '/lobby/$id' | '/lobby/new'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths: "/" | "/lobby" | "/lobby/$id" | "/lobby/new";
+  fileRoutesByTo: FileRoutesByTo;
+  to: "/" | "/lobby" | "/lobby/$id" | "/lobby/new";
+  id: "__root__" | "/" | "/lobby" | "/lobby/$id" | "/lobby/new";
+  fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  LobbyRoute: typeof LobbyRouteWithChildren
+  IndexRoute: typeof IndexRoute;
+  LobbyRoute: typeof LobbyRouteWithChildren;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LobbyRoute: LobbyRouteWithChildren,
-}
+};
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
 /* ROUTE_MANIFEST_START
 {

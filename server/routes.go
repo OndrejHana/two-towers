@@ -36,7 +36,7 @@ func getAuthLogoutFunction(res http.ResponseWriter, req *http.Request) {
 
 func getAuthProviderFunction(res http.ResponseWriter, req *http.Request) {
 	if gothUser, err := gothic.CompleteUserAuth(res, req); err == nil {
-		fmt.Println("getAuthProviderFunction", gothUser)
+		fmt.Println("getAuthProviderFunction", gothUser.UserID)
 	} else {
 		fmt.Println("authenticating")
 		gothic.BeginAuthHandler(res, req)
