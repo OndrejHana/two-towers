@@ -1,6 +1,12 @@
 package server
 
-import "errors"
+import (
+	"fmt"
+	"net/http"
+	lobbystore "two-towers/lib/lobbyStore"
+
+	"github.com/gorilla/pat"
+)
 
 func Run() error {
 	// err := godotenv.Load()
@@ -12,12 +18,14 @@ func Run() error {
 	// 	return fmt.Errorf("CLERK_SECRET_KEY not set")
 	// }
 	// clerk.SetKey(key)
-	// mux := http.NewServeMux()
-	// ls := lobbystore.NewLobbyStore()
-	//
-	// RegisterRoutes(mux, &ls)
-	//
-	// return http.ListenAndServe("localhost:8080", mux)
 
-	return errors.New("Not implemented")
+	NewAuth()
+	ls := lobbystore.NewLobbyStore()
+	server := pat.New()
+
+	RegisterRoutes(server, &ls)
+
+	fmt.Println("running server")
+	return http.ListenAndServe("localhost:8000", server)
+
 }
