@@ -1,6 +1,7 @@
 package lobbystore
 
 import (
+	"encoding/json"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -21,14 +22,18 @@ type NewLobbyRes struct {
 }
 
 type Lobby struct {
-	id             uuid.UUID
-	connString     string
-	players        uint8
-	p1, p2, p3, p4 *string
+	id          uuid.UUID
+	connString  string
+	playerCount uint8
+	players     []string
 }
 
 func (l *Lobby) GetConnString() string {
 	return l.connString
+}
+
+func (l *Lobby) JSON() ([]byte, error) {
+	return json.Marshal(l)
 }
 
 func NewLobby(p1 string) Lobby {
@@ -36,13 +41,10 @@ func NewLobby(p1 string) Lobby {
 	connString := randSeq(4)
 
 	return Lobby{
-		id:         id,
-		connString: connString,
-		players:    1,
-		p1:         &p1,
-		p2:         nil,
-		p3:         nil,
-		p4:         nil,
+		id:          id,
+		connString:  connString,
+		playerCount: 1,
+		players:     []string{p1},
 	}
 }
 

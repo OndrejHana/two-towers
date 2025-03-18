@@ -16,25 +16,6 @@ type User struct {
 	ID string
 }
 
-// func getAuth(r *http.Request) (*clerk.User, bool, error) {
-// 	ctx := r.Context()
-// 	claims, ok := clerk.SessionClaimsFromContext(ctx)
-// 	if !ok {
-// 		return nil, false, nil
-// 	}
-//
-// 	u, err := user.Get(ctx, claims.Subject)
-// 	if err != nil {
-// 		return nil, ok, err
-// 	}
-//
-// 	return u, true, nil
-// }
-
-//	func getAuth(r *http.Request) (*User, bool, error) {
-//		return nil, false, errors.New("Not implemented")
-//	}
-
 func getAuthCallbackFunction(w http.ResponseWriter, r *http.Request) {
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
@@ -67,7 +48,6 @@ func RegisterRoutes(router *pat.Router, ls *lobbystore.LobbyStore) {
 	router.Get("/auth/{provider}/logout", getAuthLogoutFunction)
 	router.Get("/auth/{provider}", getAuthProviderFunction)
 
-	// router.Handle("/", http.FileServer(http.Dir("dist")))
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("dist"))).Methods("GET")
 	http.Handle("/", router)
 
