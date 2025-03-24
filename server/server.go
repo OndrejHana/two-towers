@@ -9,21 +9,15 @@ import (
 )
 
 func Run() error {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	return fmt.Errorf("Error loading .env file")
-	// }
-	// key := os.Getenv("CLERK_SECRET_KEY")
-	// if key == "" {
-	// 	return fmt.Errorf("CLERK_SECRET_KEY not set")
-	// }
-	// clerk.SetKey(key)
 
-	NewAuth()
+	store, err := NewAuth()
+	if err != nil {
+		return err
+	}
 	ls := lobbystore.NewLobbyStore()
 	server := pat.New()
 
-	RegisterRoutes(server, &ls)
+	RegisterRoutes(server, &ls, store)
 
 	fmt.Println("running server")
 	return http.ListenAndServe("localhost:8000", server)
