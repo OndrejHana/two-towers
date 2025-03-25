@@ -1,18 +1,16 @@
 # Two Towers
 
-Go backend
-vanilla typescript bundeled by Vite frontend
+Payload:
+- world
+- units
+- towers
+- players
 
 ## TODO
-- [ ] Pridat three.js
-- [ ] Pridat sqlite databazi
-- [x] Pridat hlavni stranku
-- [x] Pridat Tailwind
-- [ ] Opravit a* tak, aby respektoval jiz existujici cesty
-- [ ] Upravit genenrovani map tak, aby se pridaly dalsi cesty
-- [ ] Nastavit server
-- [ ] Upravit linky podle nastaveni serveru
-- [ ] Pridat hlavni stranku
-- [ ] Nakreslit logo
-- [ ] Udelat stranku na zakladani hry
-- [ ] Opravit errorove hlasky, protoze takhle jsou nepouzitelne
+- [ ] Hostovat Vite frontend z Go
+- [ ] Vykreslit mapu na základě Payload
+- [ ] Websocket spojení s backendem a Gameloop
+- [ ] Vygenerovat Payload z backend
+- [ ] Auth a přihlašování uživatelů
+- [ ] Lobby, connection code a přidávání uživatelů do lobby
+- [ ] Multiplayer Gameloop
