@@ -1,11 +1,16 @@
 import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
 
-export function render(payload) {
-  const container = document.querySelector("#app");
+/**
+ * @param {WebSocket} conn
+ */
+export function render(payload, conn) {
+  const app = document.querySelector("#app");
+  const container = document.createElement("div");
+  app.appendChild(container);
   const scene = new THREE.Scene();
 
-  const frustumSize = 16;
+  const frustumSize = 20;
   const aspect = window.innerWidth / window.innerHeight;
   const camera = new THREE.OrthographicCamera(
     (-frustumSize * aspect) / 2, // left
@@ -16,7 +21,7 @@ export function render(payload) {
     1000, // far
   );
 
-  camera.position.set(20, 20, 20);
+  camera.position.set(10, 10, 10);
   camera.lookAt(scene.position);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -30,11 +35,11 @@ export function render(payload) {
         ? payload.players[tower.playerId].color
         : "#64748b";
 
-    const geometry = new THREE.CylinderGeometry(0.25, 0.25, 2, 8);
+    const geometry = new THREE.CylinderGeometry(0.25, 0.25, 1, 8);
     const material = new THREE.MeshBasicMaterial({ color });
     const cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.x = x;
-    cylinder.position.z = y;
+    cylinder.position.set(x, 0.5, y);
+
     scene.add(cylinder);
   }
 
@@ -53,6 +58,7 @@ export function render(payload) {
     scene.add(capsule);
   }
 
+  const terrain = [];
   payload.world.forEach((row, y) =>
     row.forEach((tile, x) => {
       let color = 0xd4d4d4;
@@ -76,9 +82,13 @@ export function render(payload) {
       );
       mesh.position.x = x;
       mesh.position.z = y;
-      scene.add(mesh);
+      terrain.push(mesh);
     }),
   );
+
+  scene.add(...terrain);
+
+  //scene.add(new THREE.GridHelper(10, 10));
 
   function animate() {
     renderer.render(scene, camera);
@@ -91,4 +101,24 @@ export function render(payload) {
     const warning = WebGL.getWebGL2ErrorMessage();
     container.appendChild(warning);
   }
+
+  const raycaster = new THREE.Raycaster();
+
+  container.addEventListener("mousedown", (e) => {
+    raycaster.setFromCamera(
+      new THREE.Vector2(
+        (e.clientX / window.innerWidth) * 2 - 1,
+        -(e.clientY / window.innerHeight) * 2 + 1,
+      ),
+      camera,
+    );
+    const intersections = raycaster.intersectObjects(terrain);
+    if (intersections.length > 0) {
+      const tile = intersections[0];
+      console.log(
+        tile.object.position,
+        payload.world[tile.object.position.z][tile.object.position.x],
+      );
+    }
+  });
 }
