@@ -1,6 +1,20 @@
 import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
 
+const NONE = 0;
+const TOWER = 1;
+const ROAD = 2;
+
+const DIRECTIONS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+];
 /**
  * @param {WebSocket} conn
  */
@@ -29,7 +43,7 @@ export function render(payload, conn) {
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   function createTower(x, y, tile) {
-    const tower = payload.towers[tile.towerId];
+    const tower = payload.towers[tile.structureId];
     const color =
       tower.playerId !== null
         ? payload.players[tower.playerId].color
@@ -41,6 +55,14 @@ export function render(payload, conn) {
     cylinder.position.set(x, 0.5, y);
 
     scene.add(cylinder);
+  }
+
+  /**
+   * @param {THREE.Mesh} mesh
+   */
+  function setColor(mesh, color) {
+    console.log("setting color", color);
+    mesh.material.color.set(color);
   }
 
   function createUnit(x, y, tile) {
@@ -83,12 +105,11 @@ export function render(payload, conn) {
       mesh.position.x = x;
       mesh.position.z = y;
       terrain.push(mesh);
+      tile.mesh = mesh;
     }),
   );
 
   scene.add(...terrain);
-
-  //scene.add(new THREE.GridHelper(10, 10));
 
   function animate() {
     renderer.render(scene, camera);
@@ -104,6 +125,7 @@ export function render(payload, conn) {
 
   const raycaster = new THREE.Raycaster();
 
+  let selected = null;
   container.addEventListener("mousedown", (e) => {
     raycaster.setFromCamera(
       new THREE.Vector2(
@@ -113,12 +135,44 @@ export function render(payload, conn) {
       camera,
     );
     const intersections = raycaster.intersectObjects(terrain);
+    console.log(intersections);
     if (intersections.length > 0) {
-      const tile = intersections[0];
-      console.log(
-        tile.object.position,
-        payload.world[tile.object.position.z][tile.object.position.x],
-      );
+      const intersection = intersections[0];
+      const x = intersection.object.position.z;
+      const y = intersection.object.position.x;
+      const tile = payload.world[x][y];
+      console.log([x, y], tile);
+      if (tile.structure === TOWER) {
+        selected = payload.towers[tile.structureId];
+        console.log("selected", selected);
+        const adjacentRoads = DIRECTIONS.map((dir) => [x + dir[0], y + dir[1]])
+          .filter(
+            (dir) =>
+              dir[0] >= 0 &&
+              dir[0] < payload.world.length &&
+              dir[1] >= 0 &&
+              dir[1] < payload.world.length,
+          )
+          .filter(
+            (coords) => payload.world[coords[0]][coords[1]].structure === ROAD,
+          )
+          .map((dir) => ({
+            tile: payload.world[dir[0]][dir[1]],
+            road: payload.roads[tile.structureId],
+            coords: dir,
+          }));
+        console.log("adjacentRoads", adjacentRoads);
+        //if (selected.targetRoadId !== null) {
+        adjacentRoads.forEach(({ tile }) => {
+          let color = 0xfca5a5;
+          if (tile.structureId === selected.targetRoadId) {
+            color = 0xd9f99d;
+          }
+          console.log(tile, color);
+          setColor(tile.mesh, color);
+        });
+        //}
+      }
     }
   });
 }
