@@ -4,7 +4,7 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import "./types";
 import { COLORS } from "./consts";
 import { setBaseTileColor, getAdjacentRoadCoords } from "./lib";
-import { registerTowerSelection } from "./hooks";
+import { registerTowerRoadSelection, registerTowerSelection } from "./hooks";
 
 function createScene(width, height) {
   const scene = new THREE.Scene();
@@ -134,7 +134,9 @@ function init(payload, conn, appDiv) {
   const towers = initTowers(payload.towers, scene, payload.players);
   const units = initUnits(payload.units, payload.players, scene);
 
-  registerTowerSelection(
+  let highlightedRoads = [];
+
+  const { getSelected } = registerTowerSelection(
     towers,
     payload.towers,
     appDiv,
@@ -149,15 +151,31 @@ function init(payload, conn, appDiv) {
         );
       }
       if (next !== null) {
-        getAdjacentRoadCoords(next.point, payload.world).forEach((coords) =>
-          grid[coords.x][coords.y].material.color.set(
-            next.targetRoadId === payload.world[coords.x][coords.y].structureId
-              ? COLORS.SELECTED_ACTIVE
-              : COLORS.SELECTED_INACTIVE,
-          ),
+        highlightedRoads = getAdjacentRoadCoords(next.point, payload.world).map(
+          (coords) => {
+            const tile = grid[coords.x][coords.y];
+            tile.material.color.set(
+              next.targetRoadId ===
+                payload.world[coords.x][coords.y].structureId
+                ? COLORS.SELECTED_ACTIVE
+                : COLORS.SELECTED_INACTIVE,
+            );
+            return tile;
+          },
         );
+      } else {
+        highlightedRoads = [];
       }
     },
+  );
+
+  registerTowerRoadSelection(
+    getSelected,
+    payload.world,
+    grid,
+    conn,
+    appDiv,
+    camera,
   );
 
   renderCanvas(renderer, appDiv, () => {
