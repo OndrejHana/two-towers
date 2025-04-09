@@ -29,27 +29,20 @@ type Tile struct {
 }
 
 type Unit struct {
-	PlayerId uint `json:"playerId"`
+	PlayerId uint  `json:"playerId"`
+	Point    Point `json:"point"`
 }
 
 type Tower struct {
 	PlayerId     *uint `json:"playerId"`
 	TargetRoadId *uint `json:"targetRoadId"`
-	X            uint  `json:"x"`
-	Y            uint  `json:"y"`
+	Point        Point `json:"point"`
 }
 
 type Road struct {
-	Tiles []Point `json:"tiles"`
-	From  Tower   `json:"from"`
-	To    Tower   `json:"to"`
-}
-
-func (t *Tower) getPoint() Point {
-	return Point{
-		X: t.X,
-		Y: t.Y,
-	}
+	Points []Point `json:"points"`
+	From   Tower   `json:"from"`
+	To     Tower   `json:"to"`
 }
 
 type Player struct {
@@ -177,7 +170,7 @@ func CreateMock() Game {
 	}
 
 	units := []Unit{
-		{PlayerId: 1},
+		{PlayerId: 1, Point: Point{X: 1, Y: 4}},
 	}
 
 	p1 := uint(0)
@@ -185,18 +178,24 @@ func CreateMock() Game {
 	towers := []Tower{
 		{
 			PlayerId: &p1,
-			X:        1,
-			Y:        1,
+			Point: Point{
+				X: 1,
+				Y: 1,
+			},
 		},
 		{
 			PlayerId: nil,
-			X:        8,
-			Y:        8,
+			Point: Point{
+				X: 8,
+				Y: 8,
+			},
 		},
 		{
-			PlayerId:     &p2,
-			X:            1,
-			Y:            8,
+			PlayerId: &p2,
+			Point: Point{
+				X: 1,
+				Y: 8,
+			},
 			TargetRoadId: &p1,
 		},
 	}
@@ -230,9 +229,9 @@ func CreateMock() Game {
 		}
 	}
 	roads = append(roads, Road{
-		Tiles: tiles1,
-		From:  towers[0],
-		To:    towers[1],
+		Points: tiles1,
+		From:   towers[0],
+		To:     towers[1],
 	})
 
 	tiles2 := []Point{}
@@ -244,9 +243,9 @@ func CreateMock() Game {
 		}
 	}
 	roads = append(roads, Road{
-		Tiles: tiles2,
-		From:  towers[2],
-		To:    towers[1],
+		Points: tiles2,
+		From:   towers[2],
+		To:     towers[1],
 	})
 
 	world[1][4].UnitId = &t
