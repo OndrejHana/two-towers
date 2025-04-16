@@ -5,6 +5,7 @@ import "./types";
 import { COLORS } from "./consts";
 import { setBaseTileColor, getAdjacentRoadCoords } from "./lib";
 import { registerTowerRoadSelection, registerTowerSelection } from "./hooks";
+import { initAuth } from "./auth";
 
 function createScene(width, height) {
   const scene = new THREE.Scene();
@@ -184,30 +185,37 @@ function init(payload, conn, appDiv) {
 }
 
 window.addEventListener("load", async function () {
-  const res = await fetch("/game/new");
-  const payload = await res.json();
+  const clerk = await initAuth();
+  console.log("printing user", clerk.user);
 
-  const conn = new WebSocket("ws://" + document.location.host + "/game/ws");
-
-  const button = document.createElement("button");
-  button.innerText = "click me";
-  button.className = "ws-testbutton";
   const appDiv = document.querySelector("#app");
+  const button = document.createElement("button");
+  if (clerk.user) {
+    appDiv.innerHTML = JSON.stringify(clerk.user);
+    clerk.mountUserButton(button);
+  } else {
+    clerk.mountSignIn(button);
+    button.innerText = "sign in";
+  }
   appDiv.appendChild(button);
 
-  conn.onclose = function (_) {
-    console.log("connection closed");
-  };
-  conn.onmessage = function (evt) {
-    var messages = evt.data.split("\n");
-    console.log(messages);
-  };
-
-  button.addEventListener("mousedown", (_) => {
-    console.log("clicked");
-    conn.send("sup");
+  const res = await fetch("/game/new", {
+    headers: {
+      Authorization: `Bearer ${await clerk.session.getToken()}`,
+    },
   });
+  const payload = await res.json();
+
+  //const conn = new WebSocket("ws://" + document.location.host + "/game/ws");
+  //
+  //conn.onclose = function (_) {
+  //  console.log("connection closed");
+  //};
+  //conn.onmessage = function (evt) {
+  //  var messages = evt.data.split("\n");
+  //  console.log(messages);
+  //};
 
   console.log(payload);
-  init(payload, conn, appDiv);
+  //init(payload, conn, appDiv);
 });
