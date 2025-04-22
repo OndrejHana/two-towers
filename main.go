@@ -33,7 +33,7 @@ func main() {
 		json.NewEncoder(w).Encode(lib.CreateMock())
 	})))
 
-	router.Handle("/game/ws", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Handle("/game/ws", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			fmt.Println("upgrade:", err)
@@ -56,7 +56,7 @@ func main() {
 		}
 
 		fmt.Println("ending")
-	})))
+	}))
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("dist"))).Methods("GET")
 	http.ListenAndServe(":8000", router)

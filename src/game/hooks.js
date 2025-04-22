@@ -1,4 +1,4 @@
-import "./types";
+import "../types";
 import { Raycaster, Mesh, Camera } from "three";
 import { getAdjacentRoadCoords } from "./lib";
 import { screenToNDC } from "./lib";

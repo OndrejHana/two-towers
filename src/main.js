@@ -1,211 +1,51 @@
-import * as THREE from "three";
-import WebGL from "three/addons/capabilities/WebGL.js";
-
 import "./types";
-import { COLORS } from "./consts";
-import { setBaseTileColor, getAdjacentRoadCoords } from "./lib";
-import { registerTowerRoadSelection, registerTowerSelection } from "./hooks";
-import { initAuth } from "./auth";
-
-function createScene(width, height) {
-  const scene = new THREE.Scene();
-
-  const frustumSize = 20;
-  const aspect = width / height;
-  const camera = new THREE.OrthographicCamera(
-    (-frustumSize * aspect) / 2, // left
-    (frustumSize * aspect) / 2, // right
-    frustumSize / 2, // top
-    -frustumSize / 2, // bottom
-    0.1, // near
-    1000, // far
-  );
-
-  camera.position.set(10, 10, 10);
-  camera.lookAt(scene.position);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio * 1.5);
-  renderer.setSize(width, height);
-
-  return {
-    scene,
-    renderer,
-    camera,
-  };
-}
-
-/**
- * @param {THREE.WebGLRenderer} renderer
- * @param {HTMLDivElement} rootDiv
- * @param {Function} loop
- */
-function renderCanvas(renderer, rootDiv, loop) {
-  const container = document.createElement("div");
-  rootDiv.appendChild(container);
-
-  if (WebGL.isWebGL2Available()) {
-    container.appendChild(renderer.domElement);
-    renderer.setAnimationLoop(loop);
-  } else {
-    const warning = WebGL.getWebGL2ErrorMessage();
-    container.appendChild(warning);
-  }
-}
-
-/**
- * @param {Tile[][]} world
- * @param {THREE.Scene} scene
- * @param {number} tileSize
- * @param {THREE.ColorRepresentation} baseColor
- * @returns {THREE.Mesh[][]}
- */
-function initGrid(world, scene, tileSize = 1) {
-  const geometry = new THREE.BoxGeometry(tileSize, 0.1, tileSize);
-
-  return world.map((row, x) => {
-    const terrainRow = row.map((tile, z) => {
-      const material = new THREE.MeshBasicMaterial();
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(x * tileSize, 0, z * tileSize);
-      setBaseTileColor(mesh, tile);
-      scene.add(mesh);
-      return mesh;
-    });
-    return terrainRow;
-  });
-}
-
-/**
- * @param {Tower[]} towers
- * @param {THREE.Scene} scene
- * @param {Player[]} players
- * @param {number} tileSize
- * @returns {Mesh[]}
- */
-function initTowers(towers, scene, players, tileSize = 1) {
-  const geometry = new THREE.CylinderGeometry(
-    tileSize / 4,
-    tileSize / 4,
-    tileSize,
-    8,
-  );
-  return towers.map((tower) => {
-    const color =
-      tower.playerId !== null
-        ? players[tower.playerId].color
-        : COLORS.NEUTRAL_TOWER;
-    const material = new THREE.MeshBasicMaterial({ color });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(tower.point.x, 0.5, tower.point.y);
-    scene.add(mesh);
-    return mesh;
-  });
-}
-
-/**
- * @param {Unit[]} units
- * @param {Player[]} players
- * @param {THREE.Scene} scene
- */
-function initUnits(units, players, scene, tileSize = 1) {
-  const geometry = new THREE.CapsuleGeometry(tileSize / 4, tileSize / 4);
-  units.map((unit) => {
-    const mesh = new THREE.Mesh(
-      geometry,
-      new THREE.MeshBasicMaterial({ color: players[unit.playerId].color }),
-    );
-    mesh.position.set(unit.point.x, 0.5, unit.point.y);
-    scene.add(mesh);
-    return mesh;
-  });
-}
-
-/**
- * @param {WebSocket} conn
- * @param {Payload} payload
- * @param {HTMLDivElement} appDiv
- */
-function init(payload, conn, appDiv) {
-  const { scene, renderer, camera } = createScene(
-    window.innerWidth,
-    window.innerHeight,
-  );
-  const grid = initGrid(payload.world, scene);
-  const towers = initTowers(payload.towers, scene, payload.players);
-  const units = initUnits(payload.units, payload.players, scene);
-
-  let highlightedRoads = [];
-
-  const { getSelected } = registerTowerSelection(
-    towers,
-    payload.towers,
-    appDiv,
-    camera,
-    (old, next) => {
-      if (old !== null) {
-        getAdjacentRoadCoords(old.point, payload.world).forEach((coords) =>
-          setBaseTileColor(
-            grid[coords.x][coords.y],
-            payload.world[coords.x][coords.y],
-          ),
-        );
-      }
-      if (next !== null) {
-        highlightedRoads = getAdjacentRoadCoords(next.point, payload.world).map(
-          (coords) => {
-            const tile = grid[coords.x][coords.y];
-            tile.material.color.set(
-              next.targetRoadId ===
-                payload.world[coords.x][coords.y].structureId
-                ? COLORS.SELECTED_ACTIVE
-                : COLORS.SELECTED_INACTIVE,
-            );
-            return tile;
-          },
-        );
-      } else {
-        highlightedRoads = [];
-      }
-    },
-  );
-
-  registerTowerRoadSelection(
-    getSelected,
-    payload.world,
-    grid,
-    conn,
-    appDiv,
-    camera,
-  );
-
-  renderCanvas(renderer, appDiv, () => {
-    renderer.render(scene, camera);
-  });
-}
+import { initAuth, renderLoginPage } from "./auth";
+import { State, MAIN, LOGIN } from "./state";
 
 window.addEventListener("load", async function () {
+  const app = document.querySelector("#app");
+  const state = new State(app);
   const clerk = await initAuth();
-  console.log("printing user", clerk.user);
-
-  const appDiv = document.querySelector("#app");
-  const button = document.createElement("button");
-  if (clerk.user) {
-    appDiv.innerHTML = JSON.stringify(clerk.user);
-    clerk.mountUserButton(button);
+  state.context.clerk = clerk;
+  if (!clerk.user) {
+    console.log(state.renderWith(LOGIN));
   } else {
-    clerk.mountSignIn(button);
-    button.innerText = "sign in";
+    console.log(state.renderWith(MAIN));
   }
-  appDiv.appendChild(button);
 
-  const res = await fetch("/game/new", {
-    headers: {
-      Authorization: `Bearer ${await clerk.session.getToken()}`,
-    },
-  });
-  const payload = await res.json();
+  //if (clerk.user) {
+  //  state.state = MAIN;
+  //} else {
+  //  state.state = LOGIN;
+  //}
 
+  //
+  //const appDiv = document.querySelector("#app");
+  //const button = document.createElement("button");
+  //  clerk.mountUserButton(button);
+  //} else {
+  //  renderLoginPage(appDiv, clerk);
+  //}
+  //appDiv.appendChild(button);
+  //console.log("printing user", clerk.user);
+  //
+  //const appDiv = document.querySelector("#app");
+  //const button = document.createElement("button");
+  //if (clerk.user) {
+  //  appDiv.innerHTML = JSON.stringify(clerk.user);
+  //  clerk.mountUserButton(button);
+  //} else {
+  //  clerk.mountSignIn(button);
+  //  button.innerText = "sign in";
+  //}
+  //appDiv.appendChild(button);
+  //
+  //const res = await fetch("/game/new", {
+  //  headers: {
+  //    Authorization: `Bearer ${await clerk.session.getToken()}`,
+  //  },
+  //});
+  //const payload = await res.json();
   //const conn = new WebSocket("ws://" + document.location.host + "/game/ws");
   //
   //conn.onclose = function (_) {
@@ -215,7 +55,5 @@ window.addEventListener("load", async function () {
   //  var messages = evt.data.split("\n");
   //  console.log(messages);
   //};
-
-  console.log(payload);
   //init(payload, conn, appDiv);
 });
