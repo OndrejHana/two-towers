@@ -1,7 +1,6 @@
 import "../types";
 import { Raycaster, Mesh, Camera } from "three";
-import { getAdjacentRoadCoords } from "./lib";
-import { screenToNDC } from "./lib";
+import { getAdjacentRoadCoords, screenToNDC } from "./lib";
 
 /**
  * @callback onSelectionChange

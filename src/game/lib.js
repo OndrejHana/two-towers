@@ -1,6 +1,6 @@
 import WebGL from "three/addons/capabilities/WebGL.js";
 import "../types";
-import { COLORS, DIRECTIONS, TOWER, ROAD } from "../consts";
+import { COLORS, DIRECTIONS, TOWER, ROAD } from "./consts";
 import * as THREE from "three";
 import { registerTowerSelection, registerTowerRoadSelection } from "./hooks";
 
@@ -29,7 +29,7 @@ export function getAdjacentRoadCoords(point, world) {
 }
 
 /**
- * @param {Mesh} mesh
+ * @param {THREE.Mesh} mesh
  * @param {Tile} tile
  */
 export function setBaseTileColor(mesh, tile) {
@@ -120,7 +120,7 @@ export function initGrid(world, scene, tileSize = 1) {
  * @param {THREE.Scene} scene
  * @param {Player[]} players
  * @param {number} tileSize
- * @returns {Mesh[]}
+ * @returns {THREE.Mesh[]}
  */
 export function initTowers(towers, scene, players, tileSize = 1) {
   const geometry = new THREE.CylinderGeometry(
@@ -146,6 +146,7 @@ export function initTowers(towers, scene, players, tileSize = 1) {
  * @param {Unit[]} units
  * @param {Player[]} players
  * @param {THREE.Scene} scene
+ * @returns {THREE.Mesh}
  */
 export function initUnits(units, players, scene, tileSize = 1) {
   const geometry = new THREE.CapsuleGeometry(tileSize / 4, tileSize / 4);
