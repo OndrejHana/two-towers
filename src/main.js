@@ -1,23 +1,15 @@
+import { navigate, onNavigate } from "./routes";
 import { initAuth } from "./auth";
-import { onNavigate } from "./routes";
 
 async function main() {
-  await initAuth();
-
-  // Handle initial URL load
-  const initialPath = window.location.pathname;
-  if (initialPath !== '/') {
-    // For non-root paths, we need to add the initial state to history
-    history.replaceState({ path: initialPath }, '', initialPath);
+  console.log("start");
+  window.addEventListener("popstate", (_) => onNavigate());
+  const clerk = await initAuth();
+  if (clerk.session) {
+    navigate(location.pathname);
+  } else {
+    navigate("/login");
   }
-
-  // Render the initial route
-  onNavigate();
-
-  // Handle browser back/forward buttons
-  window.addEventListener("popstate", (event) => {
-    onNavigate();
-  });
 }
 
 window.addEventListener("load", main);

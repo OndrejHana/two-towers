@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "localhost:8000", "http service address")
 
 func Init() error {
 	if err := godotenv.Load(); err != nil {
@@ -24,5 +24,5 @@ func Init() error {
 	SetupRoutes(router)
 
 	log.Printf("Starting server on %s", *addr)
-	return http.ListenAndServe(":8000", router)
+	return http.ListenAndServe("localhost:8000", router)
 }
