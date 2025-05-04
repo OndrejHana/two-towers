@@ -1,4 +1,4 @@
-package handlers
+package server
 
 import (
 	"encoding/json"
@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/OndrejHana/two-towers/server/lobby"
 	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/clerk/clerk-sdk-go/v2/jwt"
+	"github.com/clerk/clerk-sdk-go/v2/user"
 )
 
 type CreateLobbyResponse struct {
@@ -24,17 +25,21 @@ type CreateLobbyRequest struct {
 }
 
 type GetLobbyResponse struct {
-	Players []lobby.Player `json:"players"`
-	Ready   bool           `json:"ready"`
+	Players []Player `json:"players"`
+	Ready   bool     `json:"ready"`
 }
 
 type StatusResponse struct {
-	Event   lobby.Event    `json:"event"`
-	Players []lobby.Player `json:"players"`
+	Event   Event    `json:"event"`
+	Players []Player `json:"players"`
 }
 
 type ToggleReadyResponse struct {
-	Player lobby.Player `json:"player"`
+	Player Player `json:"player"`
+}
+
+type WSUserId struct {
+	UserToken string `json:"userToken"`
 }
 
 func NewLobbyHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,13 +62,13 @@ func NewLobbyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l, err := lobby.NewLobby(4)
+	l, err := NewLobby(4)
 	if err != nil {
 		http.Error(w, "Lobby could not be created", http.StatusInternalServerError)
 		return
 	}
 
-	p := lobby.NewPlayer(clerkUserID, req.Username)
+	p := NewPlayer(clerkUserID, req.Username)
 	if err := l.AddPlayer(p); err != nil {
 		http.Error(w, "Player could not be added", http.StatusInternalServerError)
 		return
@@ -88,7 +93,7 @@ func GetLobbyHandler(w http.ResponseWriter, r *http.Request) {
 	clerkUserID := sessionClaims.Subject
 
 	code := r.URL.Query().Get(":code")
-	l, exists := lobby.GetLobby(code)
+	l, exists := GetLobby(code)
 
 	if !exists {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
@@ -123,7 +128,7 @@ func LobbyStatusHandler(w http.ResponseWriter, r *http.Request) {
 	clerkUserID := sessionClaims.Subject
 
 	code := r.URL.Query().Get(":code")
-	l, exists := lobby.GetLobby(code)
+	l, exists := GetLobby(code)
 
 	if !exists {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
@@ -146,8 +151,8 @@ func LobbyStatusHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case <-time.After(time.Second * 5):
 		res = StatusResponse{
-			Event: lobby.Event{
-				EventType: lobby.Status,
+			Event: Event{
+				EventType: Status,
 			},
 			Players: l.GetPlayers(),
 		}
@@ -177,14 +182,14 @@ func JoinLobbyHandler(w http.ResponseWriter, r *http.Request) {
 
 	clerkUserID := sessionClaims.Subject
 
-	l, exists := lobby.GetLobby(req.Code)
+	l, exists := GetLobby(req.Code)
 
 	if !exists {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
 		return
 	}
 
-	p := lobby.NewPlayer(clerkUserID, req.Username)
+	p := NewPlayer(clerkUserID, req.Username)
 	if err := l.AddPlayer(p); err != nil {
 		http.Error(w, "Player could not be added", http.StatusInternalServerError)
 		return
@@ -208,7 +213,7 @@ func LeaveLobbyHandler(w http.ResponseWriter, r *http.Request) {
 	clerkUserID := sessionClaims.Subject
 
 	code := r.URL.Query().Get(":code")
-	l, exists := lobby.GetLobby(code)
+	l, exists := GetLobby(code)
 	if !exists {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
 		return
@@ -238,7 +243,7 @@ func ToggleReadyHandler(w http.ResponseWriter, r *http.Request) {
 	clerkUserID := sessionClaims.Subject
 
 	code := r.URL.Query().Get(":code")
-	l, exists := lobby.GetLobby(code)
+	l, exists := GetLobby(code)
 	if !exists {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
 		return
@@ -258,4 +263,58 @@ func ToggleReadyHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(ToggleReadyResponse{Player: *p})
+}
+
+func HandleGameWs(w http.ResponseWriter, r *http.Request) {
+	gid := r.URL.Query().Get(":gameId")
+	g, exists := GetGame(gid)
+	if !exists {
+		http.Error(w, "Lobby not found", http.StatusNotFound)
+		return
+	}
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer ws.Close()
+
+	t, payload, err := ws.ReadMessage()
+	if err != nil {
+		http.Error(w, "Could not read payload", http.StatusNotFound)
+		return
+	}
+
+	fmt.Println(t)
+
+	var uid WSUserId
+	if err := json.Unmarshal(payload, &uid); err != nil {
+		http.Error(w, "Invalid content", http.StatusNotFound)
+		return
+	}
+
+	claims, err := jwt.Verify(r.Context(), &jwt.VerifyParams{
+		Token: uid.UserToken,
+	})
+
+	if err != nil {
+		http.Error(w, "Could not get user", http.StatusInternalServerError)
+		return
+	}
+
+	usr, err := user.Get(r.Context(), claims.Subject)
+	if err != nil {
+		http.Error(w, "Could not get user", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(usr.ID, g.GetPlayers())
+	p, exists := g.GetPlayer(usr.ID)
+	if !exists {
+		http.Error(w, "Player not found in game", http.StatusInternalServerError)
+		return
+	}
+
+	p.ws = ws
 }

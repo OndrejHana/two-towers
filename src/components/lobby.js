@@ -100,6 +100,9 @@ export async function renderLobby() {
       });
       if (res.ok) {
         const body = await res.json();
+        if (body.event.EventType === 4 && !!body.event.GameId) {
+          navigate(`/game/${body.event.GameId}`);
+        }
         fillPlayerList(body.players);
       }
     }

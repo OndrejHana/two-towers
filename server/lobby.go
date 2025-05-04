@@ -28,6 +28,7 @@ func generateCode() (string, error) {
 
 type Event struct {
 	EventType int
+	GameId    *string
 }
 
 type Player struct {
@@ -53,12 +54,12 @@ type Lobby struct {
 	code    string
 	players []Player
 	events  chan Event
-	mu      sync.Mutex
+	lobbyMu sync.Mutex
 	maxSize int
 }
 
 var lobbies = make(map[string]*Lobby)
-var mu sync.Mutex
+var lobbyMu sync.Mutex
 
 func (l *Lobby) GetCode() string {
 	return l.code
@@ -79,13 +80,14 @@ func NewLobby(maxSize int) (*Lobby, error) {
 
 	go func() {
 		for e := range lobby.events {
-			if e.EventType == Start {
-			}
-
 			allReady := true
 
 			for _, p := range lobby.players {
 				pe := Event{EventType: e.EventType}
+				if e.EventType == Start {
+					g := StartGameFromLobby(lobby.players)
+					pe.GameId = &g.Id
+				}
 				p.eventChan <- pe
 
 				if !p.Ready {
@@ -99,16 +101,16 @@ func NewLobby(maxSize int) (*Lobby, error) {
 		}
 	}()
 
-	mu.Lock()
+	lobbyMu.Lock()
 	lobbies[code] = &lobby
-	mu.Unlock()
+	lobbyMu.Unlock()
 
 	return &lobby, nil
 }
 
 func (l *Lobby) AddPlayer(player Player) error {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.lobbyMu.Lock()
+	defer l.lobbyMu.Unlock()
 
 	if len(l.players) >= l.maxSize {
 		return errors.New("lobby is full")
@@ -122,21 +124,21 @@ func (l *Lobby) AddPlayer(player Player) error {
 }
 
 func GetLobby(code string) (*Lobby, bool) {
-	mu.Lock()
-	defer mu.Unlock()
+	lobbyMu.Lock()
+	defer lobbyMu.Unlock()
 	lobby, exists := lobbies[code]
 	return lobby, exists
 }
 
 func (l *Lobby) GetPlayers() []Player {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.lobbyMu.Lock()
+	defer l.lobbyMu.Unlock()
 	return l.players
 }
 
 func (l *Lobby) GetPlayer(playerId string) (*Player, bool) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.lobbyMu.Lock()
+	defer l.lobbyMu.Unlock()
 
 	for _, p := range l.players {
 		if p.Id == playerId {
@@ -147,8 +149,8 @@ func (l *Lobby) GetPlayer(playerId string) (*Player, bool) {
 }
 
 func (l *Lobby) ToggleReady(playerID string) (bool, error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.lobbyMu.Lock()
+	defer l.lobbyMu.Unlock()
 
 	for i, p := range l.players {
 		if p.Id == playerID {
@@ -165,8 +167,8 @@ func (l *Lobby) ToggleReady(playerID string) (bool, error) {
 }
 
 func (l *Lobby) RemovePlayer(playerID string) (*Player, bool) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.lobbyMu.Lock()
+	defer l.lobbyMu.Unlock()
 
 	for i, p := range l.players {
 		if p.Id == playerID {

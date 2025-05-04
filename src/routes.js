@@ -8,7 +8,11 @@ const routes = {
   "/": { pattern: /^\/$/, render: renderMain },
   "/login": { pattern: /^\/login$/, render: renderLogin },
   "/lobby": { pattern: /^\/lobby\/[a-zA-Z0-9]{4}$/, render: renderLobby },
-  "/game": { pattern: /^\/game$/, render: renderGame },
+  "/game": {
+    pattern:
+      /^\/game\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+    render: renderGame,
+  },
   "/404": { pattern: /^\/404$/, render: render404 },
 };
 

@@ -6,6 +6,8 @@ toolchain go1.24.2
 
 require github.com/gorilla/websocket v1.5.3
 
+require github.com/google/uuid v1.6.0 // indirect
+
 require (
 	github.com/clerk/clerk-sdk-go/v2 v2.3.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
