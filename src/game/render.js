@@ -28,6 +28,16 @@ export function init(width, height) {
   };
 }
 
+export function resize(frustumSize, width, height, camera, renderer) {
+  const aspect = width / height;
+  camera.left = (-frustumSize * aspect) / 2;
+  camera.right = (frustumSize * aspect) / 2;
+  camera.top = frustumSize / 2; // Top and bottom are based on frustumSize
+  camera.bottom = -frustumSize / 2;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
 /**
  * @param {THREE.Scene} scene
  * @param {number} tileSize

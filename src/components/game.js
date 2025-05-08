@@ -1,5 +1,5 @@
 import { getAuth } from "../auth";
-import { init, addGrid, startRendering } from "../game/render";
+import { init, addGrid, startRendering, resize } from "../game/render";
 
 function startWs(gameId, token, signal) {
   const ws = new WebSocket(`ws://localhost:8000/game/${gameId}/ws`);
@@ -28,6 +28,16 @@ export async function renderGame() {
   );
   startRendering(parent, renderer, () => renderer.render(scene, camera));
   console.log("started rendering");
+
+  window.addEventListener(
+    "resize",
+    function () {
+      const w = parent.clientWidth;
+      const h = parent.clientHeight;
+      resize(20, w, h, camera, renderer);
+    },
+    { signal: c.signal },
+  );
 
   ws.addEventListener(
     "message",
