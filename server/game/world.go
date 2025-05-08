@@ -1,4 +1,4 @@
-package lib
+package game
 
 import (
 	"fmt"
@@ -16,6 +16,12 @@ const (
 	TOWER
 	ROAD
 )
+
+type MessagePlayer struct {
+	Id       string `json:"id"`
+	Username string `json:"username"`
+	Color    string `json:"color"`
+}
 
 type Point struct {
 	X uint `json:"x"`
@@ -45,16 +51,14 @@ type Road struct {
 	To     Tower   `json:"to"`
 }
 
-type Player struct {
-	Color string `json:"color"`
+type World struct {
+	Grid  [][]Tile
+	Roads []Road
 }
 
-type Game struct {
-	World   [][]Tile `json:"world"`
-	Players []Player `json:"players"`
-	Towers  []Tower  `json:"towers"`
-	Roads   []Road   `json:"roads"`
-	Units   []Unit   `json:"units"`
+type State struct {
+	Towers []Tower
+	Units  []Unit
 }
 
 func InitializeGrid(width, height int) [][]Tile {
@@ -162,22 +166,12 @@ func PrintGrid(grid [][]Tile) {
 // 	return true
 // }
 
-func CreateMock() Game {
-	players := []Player{
-		{Color: "#0000ff"},
-		{Color: "#00ff00"},
-		{Color: "#ff0000"},
-	}
+func CreateMock(players []MessagePlayer) (World, State) {
+	units := []Unit{}
 
-	units := []Unit{
-		{PlayerId: 1, Point: Point{X: 1, Y: 4}},
-	}
-
-	p1 := uint(0)
-	p2 := uint(1)
 	towers := []Tower{
 		{
-			PlayerId: &p1,
+			PlayerId: nil,
 			Point: Point{
 				X: 1,
 				Y: 1,
@@ -187,45 +181,58 @@ func CreateMock() Game {
 			PlayerId: nil,
 			Point: Point{
 				X: 8,
-				Y: 8,
+				Y: 1,
 			},
 		},
 		{
-			PlayerId: &p2,
+			PlayerId: nil,
 			Point: Point{
 				X: 1,
 				Y: 8,
 			},
-			TargetRoadId: &p1,
+		},
+		{
+			PlayerId: nil,
+			Point: Point{
+				X: 8,
+				Y: 8,
+			},
 		},
 	}
 
 	width, height := 10, 10
 	world := InitializeGrid(width, height)
 
+	// Place towers
 	t := uint(0)
 	redTower := &world[1][1]
 	redTower.Structure = TOWER
 	redTower.StructureId = &t
 
 	t2 := uint(1)
-	blueTower := &world[8][8]
+	blueTower := &world[1][8]
 	blueTower.Structure = TOWER
 	blueTower.StructureId = &t2
 
 	t3 := uint(2)
-	greenTower := &world[1][8]
+	greenTower := &world[8][1]
 	greenTower.Structure = TOWER
 	greenTower.StructureId = &t3
 
+	t4 := uint(3)
+	purpleTower := &world[8][8]
+	purpleTower.Structure = TOWER
+	purpleTower.StructureId = &t4
+
 	roads := []Road{}
 
+	// Horizontal road 1 (top)
 	tiles1 := []Point{}
 	for x := 2; x < 8; x++ {
 		if world[1][x].Structure == 0 {
 			world[1][x].Structure = ROAD
 			world[1][x].StructureId = &t
-			tiles1 = append(tiles1, Point{X: 1, Y: uint(x)})
+			tiles1 = append(tiles1, Point{X: uint(x), Y: 1})
 		}
 	}
 	roads = append(roads, Road{
@@ -234,27 +241,56 @@ func CreateMock() Game {
 		To:     towers[1],
 	})
 
+	// Horizontal road 2 (bottom)
 	tiles2 := []Point{}
-	for y := 2; y < 8; y++ {
-		if world[y][8].Structure == 0 {
-			world[y][8].Structure = ROAD
-			world[y][8].StructureId = &t2
-			tiles2 = append(tiles2, Point{X: uint(y), Y: 8})
+	for x := 2; x < 8; x++ {
+		if world[8][x].Structure == 0 {
+			world[8][x].Structure = ROAD
+			world[8][x].StructureId = &t2
+			tiles2 = append(tiles2, Point{X: uint(x), Y: 8})
 		}
 	}
 	roads = append(roads, Road{
 		Points: tiles2,
 		From:   towers[2],
-		To:     towers[1],
+		To:     towers[3],
 	})
 
-	world[1][4].UnitId = &t
-
-	return Game{
-		World:   world,
-		Players: players,
-		Units:   units,
-		Roads:   roads,
-		Towers:  towers,
+	// Vertical road 1 (left)
+	tiles3 := []Point{}
+	for y := 2; y < 8; y++ {
+		if world[y][1].Structure == 0 {
+			world[y][1].Structure = ROAD
+			world[y][1].StructureId = &t3
+			tiles3 = append(tiles3, Point{X: 1, Y: uint(y)})
+		}
 	}
+	roads = append(roads, Road{
+		Points: tiles3,
+		From:   towers[0],
+		To:     towers[2],
+	})
+
+	// Vertical road 2 (right)
+	tiles4 := []Point{}
+	for y := 2; y < 8; y++ {
+		if world[y][8].Structure == 0 {
+			world[y][8].Structure = ROAD
+			world[y][8].StructureId = &t4
+			tiles4 = append(tiles4, Point{X: 8, Y: uint(y)})
+		}
+	}
+	roads = append(roads, Road{
+		Points: tiles4,
+		From:   towers[1],
+		To:     towers[3],
+	})
+
+	return World{
+			Grid:  world,
+			Roads: roads,
+		}, State{
+			Towers: towers,
+			Units:  units,
+		}
 }

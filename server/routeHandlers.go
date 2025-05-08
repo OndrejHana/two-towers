@@ -309,12 +309,8 @@ func HandleGameWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(usr.ID, g.GetPlayers())
-	p, exists := g.GetPlayer(usr.ID)
-	if !exists {
+	if exists = g.ConnectPlayer(usr.ID, ws); !exists {
 		http.Error(w, "Player not found in game", http.StatusInternalServerError)
 		return
 	}
-
-	p.ws = ws
 }
