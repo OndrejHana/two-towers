@@ -1,19 +1,42 @@
 import { getAuth } from "../auth";
+import { init, addGrid, startRendering } from "../game/render";
 
-export async function renderGame() {
-  const gameId = location.pathname.split("/").pop();
-  console.log("rendering game", gameId);
-
-  const c = new AbortController();
-
+function startWs(gameId, token, signal) {
   const ws = new WebSocket(`ws://localhost:8000/game/${gameId}/ws`);
   ws.addEventListener(
     "open",
     async function (_) {
-      console.log("hit onopen");
-      const token = await getAuth().session.getToken();
+      console.log("opened");
       ws.send(JSON.stringify({ userToken: token }));
-      console.log("sent client token");
+    },
+    { signal },
+  );
+
+  return ws;
+}
+
+export async function renderGame() {
+  const gameId = location.pathname.split("/").pop();
+  const c = new AbortController();
+
+  const ws = startWs(gameId, await getAuth().session.getToken(), c.signal);
+  const parent = document.getElementById("app");
+
+  const { scene, renderer, camera } = init(
+    parent.clientWidth,
+    parent.clientHeight,
+  );
+  startRendering(parent, renderer, () => renderer.render(scene, camera));
+  console.log("started rendering");
+
+  ws.addEventListener(
+    "message",
+    function (e) {
+      const message = JSON.parse(e.data);
+      console.log(message);
+      const world = message.world;
+      console.log(world.Grid);
+      addGrid(world.Grid, scene);
     },
     { signal: c.signal },
   );

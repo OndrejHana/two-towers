@@ -278,7 +278,6 @@ func HandleGameWs(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	defer ws.Close()
 
 	t, payload, err := ws.ReadMessage()
 	if err != nil {
