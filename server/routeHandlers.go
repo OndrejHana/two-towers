@@ -136,7 +136,6 @@ func LobbyStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p, exists := l.GetPlayer(clerkUserID)
-	fmt.Println(clerkUserID, p, exists)
 	if !exists {
 		http.Error(w, "Player not found", http.StatusNotFound)
 		return
@@ -278,15 +277,12 @@ func HandleGameWs(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	defer ws.Close()
 
-	t, payload, err := ws.ReadMessage()
+	_, payload, err := ws.ReadMessage()
 	if err != nil {
 		http.Error(w, "Could not read payload", http.StatusNotFound)
 		return
 	}
-
-	fmt.Println(t)
 
 	var uid WSUserId
 	if err := json.Unmarshal(payload, &uid); err != nil {
@@ -309,12 +305,9 @@ func HandleGameWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(usr.ID, g.GetPlayers())
-	p, exists := g.GetPlayer(usr.ID)
-	if !exists {
+	if exists = g.ConnectPlayer(usr.ID, ws); !exists {
 		http.Error(w, "Player not found in game", http.StatusInternalServerError)
 		return
 	}
 
-	p.ws = ws
 }

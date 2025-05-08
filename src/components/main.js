@@ -49,7 +49,7 @@ export async function renderMain() {
 
       try {
         const token = await clerk.session.getToken();
-        const response = await fetch("/lobby/new", {
+        const promise = fetch("/lobby/new", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -59,6 +59,10 @@ export async function renderMain() {
             username: nameInput.trim(),
           }),
         });
+
+        createLobbyButton.disabled = true;
+        const response = await promise;
+        createLobbyButton.disabled = false;
 
         if (!response.ok) {
           throw new Error("Failed to create lobby");

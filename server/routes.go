@@ -22,5 +22,6 @@ func SetupRoutes(router *pat.Router) {
 	router.Handle("/lobby/{code}/leave", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(LeaveLobbyHandler)))
 	router.Handle("/lobby/{code}/toggle", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(ToggleReadyHandler)))
 	router.Handle("/game/{gameId}/ws", http.HandlerFunc(HandleGameWs))
+
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("dist"))).Methods("GET")
 }
